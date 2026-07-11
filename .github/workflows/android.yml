@@ -4,6 +4,9 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -34,3 +37,17 @@ jobs:
         with:
           name: mondeo-mirrorlink
           path: app/build/outputs/apk/release/app-release.apk
+
+      - name: Publish to rolling "latest" GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          APK=app/build/outputs/apk/release/app-release.apk
+          if gh release view latest --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            gh release upload latest "$APK" --clobber --repo "${{ github.repository }}"
+          else
+            gh release create latest "$APK" \
+              --title "Latest build" \
+              --notes "Automated build from ${{ github.sha }}. Sideload app-release.apk directly - no GitHub login needed." \
+              --repo "${{ github.repository }}"
+          fi
