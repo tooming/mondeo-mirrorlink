@@ -1,6 +1,7 @@
 package ee.tooming.mondeomirror
 
-import android.net.Network
+import java.net.InetAddress
+import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
 import kotlin.concurrent.thread
@@ -11,9 +12,13 @@ import kotlin.concurrent.thread
  * XML signature verified via the Device Attestation Protocol, which needs a
  * CCC-issued certificate we don't have. Serving it unsigned tells us whether
  * the car's implementation actually enforces that at runtime.
+ *
+ * Bound directly to the USB interface's own address (rather than
+ * Network.bindSocket, which has no ServerSocket overload) so it only
+ * listens on that link, not on Wi-Fi/mobile as well.
  */
 class DeviceDescriptionServer(
-    private val network: Network,
+    private val localIp: String,
     private val uuid: String,
     private val friendlyName: String = "Mondeo MirrorLink Test"
 ) {
@@ -25,8 +30,8 @@ class DeviceDescriptionServer(
     private var acceptThread: Thread? = null
 
     fun start() {
-        val s = ServerSocket(0)
-        network.bindSocket(s)
+        val s = ServerSocket()
+        s.bind(InetSocketAddress(InetAddress.getByName(localIp), 0))
         serverSocket = s
         port = s.localPort
         running = true

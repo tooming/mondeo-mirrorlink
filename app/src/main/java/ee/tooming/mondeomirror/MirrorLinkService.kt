@@ -93,7 +93,7 @@ class MirrorLinkService : Service() {
         if (descriptionServer != null) return
         LogBus.log("NET", "Using IP $ip on $network")
 
-        val server = DeviceDescriptionServer(network, uuid)
+        val server = DeviceDescriptionServer(ip, uuid)
         server.start()
         descriptionServer = server
 
