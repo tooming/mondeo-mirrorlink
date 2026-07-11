@@ -62,10 +62,24 @@ before investing in the (much larger) video/input pipeline. The app:
 
 ## Testing
 
-1. Push to `main`, wait for the Actions run, download `mondeo-mirrorlink-debug.apk`
-   from the run's artifacts.
+1. Push to `main`, wait for the Actions run, download the `mondeo-mirrorlink`
+   artifact (contains `app-release.apk`) from the run's page.
 2. Sideload it onto an Android phone (`allow installs from this source` for
    whatever browser/files app you use to open the APK - no root required).
 3. Plug the phone into the Mondeo's USB-A port.
 4. Open the app, tap **Open USB tethering settings**, enable USB tethering.
 5. Tap **Start MirrorLink announce**, watch the log, watch SYNC 2's screen.
+
+## Signing (so a friend can install and later update it)
+
+Every CI run produces an `app-release.apk` signed with the same key, stored
+as the `KEYSTORE_BASE64`/`KEYSTORE_PASSWORD`/`KEY_ALIAS`/`KEY_PASSWORD`
+repo secrets - CI decodes the keystore at build time, it's never committed.
+Without this, GitHub's ephemeral runners would generate a fresh random debug
+key on every run, and Android refuses to install an update whose signature
+doesn't match the already-installed app (forcing an uninstall every time).
+
+**The keystore itself only exists in the GitHub secret right now - back it
+up somewhere durable.** If it's lost, future builds can still be signed with
+a *new* key, but anyone who already installed the app would have to
+uninstall the old one first to take the update.

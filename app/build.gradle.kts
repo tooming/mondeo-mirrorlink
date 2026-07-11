@@ -15,9 +15,29 @@ android {
         versionName = "0.1-phase1"
     }
 
+    // Stable signing key so repeat installs on a friend's phone update in
+    // place instead of needing an uninstall every time (CI runners have no
+    // persistent debug.keystore, so a new one would be generated every run
+    // without this). Keystore itself is never committed - CI decodes it from
+    // the KEYSTORE_BASE64 secret; see .github/workflows/android.yml.
+    val keystorePath = System.getenv("SIGNING_KEYSTORE_PATH")
+    signingConfigs {
+        if (keystorePath != null) {
+            create("release") {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (keystorePath != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 
