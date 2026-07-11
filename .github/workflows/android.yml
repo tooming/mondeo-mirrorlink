@@ -28,10 +28,15 @@ jobs:
       - name: Assemble signed release APK
         env:
           SIGNING_KEYSTORE_PATH: ${{ runner.temp }}/release.jks
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: gradle assembleRelease --stacktrace
+          SIGNING_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          gradle assembleRelease --stacktrace \
+            -PSIGNING_KEYSTORE_PATH="$SIGNING_KEYSTORE_PATH" \
+            -PKEYSTORE_PASSWORD="$SIGNING_KEYSTORE_PASSWORD" \
+            -PKEY_ALIAS="$SIGNING_KEY_ALIAS" \
+            -PKEY_PASSWORD="$SIGNING_KEY_PASSWORD"
 
       - uses: actions/upload-artifact@v4
         with:

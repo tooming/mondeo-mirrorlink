@@ -20,14 +20,20 @@ android {
     // persistent debug.keystore, so a new one would be generated every run
     // without this). Keystore itself is never committed - CI decodes it from
     // the KEYSTORE_BASE64 secret; see .github/workflows/android.yml.
-    val keystorePath = System.getenv("SIGNING_KEYSTORE_PATH")
+    //
+    // Read via -P project properties, not System.getenv(): the Gradle daemon
+    // is a long-lived process that can be started (e.g. by setup-gradle) in
+    // an earlier CI step than the one that exports these env vars, in which
+    // case System.getenv() would silently see the daemon's original,
+    // variable-less environment and produce an unsigned APK.
+    val keystorePath = findProperty("SIGNING_KEYSTORE_PATH") as String?
     signingConfigs {
         if (keystorePath != null) {
             create("release") {
                 storeFile = file(keystorePath)
-                storePassword = System.getenv("KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("KEY_ALIAS")
-                keyPassword = System.getenv("KEY_PASSWORD")
+                storePassword = findProperty("KEYSTORE_PASSWORD") as String?
+                keyAlias = findProperty("KEY_ALIAS") as String?
+                keyPassword = findProperty("KEY_PASSWORD") as String?
             }
         }
     }
