@@ -21,6 +21,17 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
+          # Without this, setup-gradle never persists configuration-cache
+          # state across separate runs (each a fresh VM) at all - the
+          # org.gradle.configuration-cache=true flag in gradle.properties
+          # is otherwise a safe no-op in CI specifically, confirmed live
+          # (#2): two consecutive runs both logged "Calculating task graph
+          # as no cached configuration is available" before this was added.
+          # Configuration-cache entries can retain resolved build inputs,
+          # so the action encrypts them at rest with this key rather than
+          # caching the plain content - a repo secret, not a real Gradle
+          # signing/publishing credential.
+          cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
 
       - name: Decode signing keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "${{ runner.temp }}/release.jks"
